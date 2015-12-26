@@ -15,7 +15,7 @@ public class CategoryRepositoryDataMock {
 	}
 
 	public static Category c() {
-		return new Category("C");
+		return new Category("C basics");
 	}
 
 	public static Category cSharp() {
@@ -34,6 +34,10 @@ public class CategoryRepositoryDataMock {
 		return new Category("AngularJs");
 	}
 
+	public static Category addIdToCategory(final Category category, final Long id) {
+		category.setId(id);
+		return category;
+	}
 	public static List<Category> allCategories() {
 		return Arrays.asList(java(), c(), cSharp(), cpp(), dotNet(), angularJs());
 	}

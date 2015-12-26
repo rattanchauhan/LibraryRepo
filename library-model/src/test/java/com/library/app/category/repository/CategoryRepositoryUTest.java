@@ -54,6 +54,7 @@ public class CategoryRepositoryUTest {
 		Assert.assertNotNull(category);
 		Assert.assertTrue(category.getName() != null && !category.getName().isEmpty()
 				&& category.getName().equals(CategoryRepositoryDataMock.java().getName()));
+		System.out.println("addCategoryAndFindIt test case Result: ");
 		System.out.println("Fetched category details for categoryId : " + categoryAddedId);
 		System.out.println(category);
 
@@ -106,18 +107,13 @@ public class CategoryRepositoryUTest {
 	}
 
 	@Test
-	public void getAllCategory() {
-		dBCommandTransactionExecutor.executeCommand(() -> {
-			return categoryRepository.addCategory(CategoryRepositoryDataMock.java()).getId();
-		});
-
-		dBCommandTransactionExecutor.executeCommand(() -> {
-			return categoryRepository.addCategory(CategoryRepositoryDataMock.c()).getId();
-		});
-
-		dBCommandTransactionExecutor.executeCommand(() -> {
-			return categoryRepository.addCategory(CategoryRepositoryDataMock.cpp()).getId();
-		});
+	public void getAllCategories() {
+		for (final Category category : CategoryRepositoryDataMock.allCategories()) {
+			dBCommandTransactionExecutor.executeCommand(() -> {
+				categoryRepository.addCategory(category);
+				return null;
+			});
+		}
 
 		final List<Category> categories = dBCommandTransactionExecutor.executeCommand(() -> {
 			return categoryRepository.list();
@@ -126,6 +122,81 @@ public class CategoryRepositoryUTest {
 		for (final Category c : categories) {
 			System.out.println(c);
 		}
-		Assert.assertTrue(categories != null && categories.size() == 3);
+		Assert.assertTrue(categories != null && categories.size() == CategoryRepositoryDataMock.allCategories().size());
+	}
+
+	@Test
+	public void getAllCategoriesSortedByField() {
+		CategoryRepositoryDataMock.allCategories().forEach(categoryRepository::addCategory);
+		final List<Category> categories = dBCommandTransactionExecutor.executeCommand(() -> {
+			return categoryRepository.getAllCategoriesSortedByField("name");
+		});
+
+		System.out.println("getAllCategoriesSortedByField test case Result:");
+		for (final Category c : categories) {
+			System.out.println(c);
+		}
+		Assert.assertTrue(categories != null && categories.size() == CategoryRepositoryDataMock.allCategories().size());
+	}
+
+	@Test
+	public void findCategoryByName() {
+		for (final Category category : CategoryRepositoryDataMock.allCategories()) {
+			dBCommandTransactionExecutor.executeCommand(() -> {
+				categoryRepository.addCategory(category);
+				return null;
+			});
+		}
+		final List<Category> categories = dBCommandTransactionExecutor.executeCommand(() -> {
+			return categoryRepository.findCategoryByName(CategoryRepositoryDataMock.c().getName());
+		});
+		System.out.println("searchCategoryByName test case Result:");
+		for (final Category c : categories) {
+			System.out.println(c);
+			Assert.assertTrue(c.getName().equals(CategoryRepositoryDataMock.c().getName()));
+		}
+	}
+
+	@Test
+	public void searchCategoriesMatchingName() {
+		for (final Category category : CategoryRepositoryDataMock.allCategories()) {
+			dBCommandTransactionExecutor.executeCommand(() -> {
+				categoryRepository.addCategory(category);
+				return null;
+			});
+		}
+		final List<Category> categories = dBCommandTransactionExecutor.executeCommand(() -> {
+			return categoryRepository.searchCategoriesMatchingName(CategoryRepositoryDataMock.c().getName());
+		});
+		System.out.println("searchCategoriesMatchingName test case Result:");
+		for (final Category c : categories) {
+			System.out.println(c);
+			Assert.assertTrue(c.getName().contains(CategoryRepositoryDataMock.c().getName()));
+		}
+	}
+
+	@Test
+	public void existsById() {
+		final Category category = dBCommandTransactionExecutor.executeCommand(() -> {
+			categoryRepository.addCategory(CategoryRepositoryDataMock.java());
+			return categoryRepository.addCategory(CategoryRepositoryDataMock.c());
+		});
+		Assert.assertTrue(dBCommandTransactionExecutor.executeCommand(() -> {
+			return categoryRepository.existsById(category.getId());
+		}));
+		Assert.assertFalse(dBCommandTransactionExecutor.executeCommand(() -> {
+			return categoryRepository.existsById(999L);
+		}));
+	}
+
+	@Test
+	public void deleteById() {
+		final Category category = dBCommandTransactionExecutor.executeCommand(() -> {
+			categoryRepository.addCategory(CategoryRepositoryDataMock.java());
+			return categoryRepository.addCategory(CategoryRepositoryDataMock.c());
+		});
+		Assert.assertTrue(dBCommandTransactionExecutor.executeCommand(() -> {
+			return categoryRepository.delete(category.getId());
+		}));
 	}
 }
